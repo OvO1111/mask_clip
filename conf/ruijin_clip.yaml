@@ -1,0 +1,51 @@
+dataset:
+  train:
+    target: dataset.ruijin.CLIPDataset
+    params:
+      split: train
+      max_size: null
+      force_collate_len: 16
+  validation:
+    target: dataset.ruijin.CLIPDataset
+    params:
+      split: val
+      max_size: 10
+      force_collate_len: 16
+
+model:
+  target: train.trainer.CLIPModel
+  params:
+    embed_dim: 256
+    image_encoder_spec:
+      target: encoder.image_model.Encoder
+      params:
+        double_z: True
+        z_channels: 4
+        resolution: [64, 128, 128]
+        in_channels: 1
+        out_ch: 4
+        ch: 96
+        ch_mult: [1,2,4,4]  # num_down = len(ch_mult)-1
+        num_res_blocks: 2
+        dropout: 0.0
+        attn_resolutions: [8,]  # on z axis, starting with 8->16->32 for len(ch_mult)==4 and resolution==64
+        attn_type: vanilla
+        use_checkpoint: True  # always use ckpt
+
+    text_encoder_spec:
+      target: encoder.text_model.LinearEmbedder
+      params:
+        input_channels: 5120
+        use_conv: true
+        out_channels: 1
+        kernel_size: 1
+
+        
+
+trainer:
+  target: train.clip_trainer.Trainer
+  params:
+    batch_size: 3
+    max_epochs: 100
+    lr: 1e-4
+    snapshot_path: /mnt/workspace/dailinrui/data/pretrained/ccdm/clip/test
